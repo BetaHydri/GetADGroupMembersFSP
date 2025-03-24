@@ -50,22 +50,29 @@ namespace GetADGroupMembersFSP
                     return;
                 }
 
-                if (string.IsNullOrEmpty(username))
+                if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password) && string.IsNullOrEmpty(domain))
                 {
-                    Console.Write("Enter username: ");
-                    username = Console.ReadLine();
+                    Console.WriteLine("Using current authenticated user.");
                 }
-
-                if (string.IsNullOrEmpty(password))
+                else
                 {
-                    Console.Write("Enter password: ");
-                    password = ReadPassword();
-                }
+                    if (string.IsNullOrEmpty(username))
+                    {
+                        Console.Write("Enter username: ");
+                        username = Console.ReadLine();
+                    }
 
-                if (string.IsNullOrEmpty(domain))
-                {
-                    Console.Write("Enter domain: ");
-                    domain = Console.ReadLine();
+                    if (string.IsNullOrEmpty(password))
+                    {
+                        Console.Write("Enter password: ");
+                        password = ReadPassword();
+                    }
+
+                    if (string.IsNullOrEmpty(domain))
+                    {
+                        Console.Write("Enter domain: ");
+                        domain = Console.ReadLine();
+                    }
                 }
 
                 // Call the method to get group members
@@ -119,13 +126,13 @@ namespace GetADGroupMembersFSP
             try
             {
                 PrincipalContext ctx;
-                if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+                if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password) && !string.IsNullOrEmpty(domain))
                 {
                     ctx = new PrincipalContext(ContextType.Domain, domain, username, password);
                 }
                 else
                 {
-                    ctx = new PrincipalContext(ContextType.Domain, domain);
+                    ctx = new PrincipalContext(ContextType.Domain);
                 }
 
                 using (ctx)
