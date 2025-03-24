@@ -21,10 +21,18 @@ GetADGroupMembersFSP is a .NET console application that retrieves members of an 
    dotnet build
    ```
 
+## Publishing the Project
+1. Open a terminal and navigate to the project directory.
+2. Run the following command to publish the project as a single executable:
+   ```sh
+   dotnet publish -c Release -r win-x64 --self-contained
+   ```
+3. Move the executable file from the `bin\Release\net6.0\win-x64\publish` directory to the main directory of the project.
+
 ## Running the Application
 To run the application, use the following command format:
 ```sh
-dotnet run -- --group-name "YourGroupName" [--recursive] [--output-csv-file "path/to/output.csv"] [--csv-delimiter ","] [--username "username"] [--password "password"]
+GetADGroupMembersFSP.exe --group-name "YourGroupName" [--recursive] [--output-csv-file "path/to/output.csv"] [--csv-delimiter ","] [--username "username"] [--password "password"]
 ```
 
 ### Command-Line Arguments
@@ -38,7 +46,7 @@ dotnet run -- --group-name "YourGroupName" [--recursive] [--output-csv-file "pat
 ## Example
 To retrieve members of the group "Sales" and export to a CSV file:
 ```sh
-dotnet run -- --group-name "Sales" --output-csv-file "C:\output\sales_members.csv"
+GetADGroupMembersFSP.exe --group-name "Sales" --output-csv-file "C:\output\sales_members.csv"
 ```
 
 ## Output
