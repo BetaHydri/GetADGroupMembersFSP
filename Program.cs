@@ -34,12 +34,15 @@ namespace GetADGroupMembersFSP
                     "The username to connect to Active Directory"),
                 new Option<string>(
                     "--password",
-                    "The password to connect to Active Directory")
+                    "The password to connect to Active Directory"),
+                new Option<string>(
+                    "--domain",
+                    "The domain to connect to Active Directory")
             };
 
             rootCommand.Description = "GetADGroupMembersFSP - A tool to retrieve members of an Active Directory group and export them to a CSV file.";
 
-            rootCommand.Handler = CommandHandler.Create<string, bool, string, string, string, string>((groupName, recursive, outputCsvFile, csvDelimiter, username, password) =>
+            rootCommand.Handler = CommandHandler.Create<string, bool, string, string, string, string, string>((groupName, recursive, outputCsvFile, csvDelimiter, username, password, domain) =>
             {
                 if (string.IsNullOrEmpty(groupName))
                 {
@@ -47,8 +50,26 @@ namespace GetADGroupMembersFSP
                     return;
                 }
 
+                if (string.IsNullOrEmpty(username))
+                {
+                    Console.Write("Enter username: ");
+                    username = Console.ReadLine();
+                }
+
+                if (string.IsNullOrEmpty(password))
+                {
+                    Console.Write("Enter password: ");
+                    password = ReadPassword();
+                }
+
+                if (string.IsNullOrEmpty(domain))
+                {
+                    Console.Write("Enter domain: ");
+                    domain = Console.ReadLine();
+                }
+
                 // Call the method to get group members
-                var members = GetGroupMembers(groupName, recursive, username, password);
+                var members = GetGroupMembers(groupName, recursive, username, password, domain);
 
                 // Export to CSV if specified
                 if (!string.IsNullOrEmpty(outputCsvFile))
@@ -92,7 +113,7 @@ namespace GetADGroupMembersFSP
             return rootCommand.InvokeAsync(args).Result;
         }
 
-        static List<GroupMember> GetGroupMembers(string groupName, bool recursive, string username, string password)
+        static List<GroupMember> GetGroupMembers(string groupName, bool recursive, string username, string password, string domain)
         {
             List<GroupMember> members = new List<GroupMember>();
             try
@@ -100,11 +121,11 @@ namespace GetADGroupMembersFSP
                 PrincipalContext ctx;
                 if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
                 {
-                    ctx = new PrincipalContext(ContextType.Domain, null, username, password);
+                    ctx = new PrincipalContext(ContextType.Domain, domain, username, password);
                 }
                 else
                 {
-                    ctx = new PrincipalContext(ContextType.Domain);
+                    ctx = new PrincipalContext(ContextType.Domain, domain);
                 }
 
                 using (ctx)
@@ -232,6 +253,31 @@ namespace GetADGroupMembersFSP
                 Console.WriteLine($"Error retrieving domain name: {ex.Message}");
                 return "Unknown Domain";
             }
+        }
+
+        static string ReadPassword()
+        {
+            string password = string.Empty;
+            ConsoleKeyInfo info;
+            do
+            {
+                info = Console.ReadKey(true);
+                if (info.Key != ConsoleKey.Backspace && info.Key != ConsoleKey.Enter)
+                {
+                    password += info.KeyChar;
+                    Console.Write("*");
+                }
+                else if (info.Key == ConsoleKey.Backspace)
+                {
+                    if (!string.IsNullOrEmpty(password))
+                    {
+                        password = password.Substring(0, password.Length - 1);
+                        Console.Write("\b \b");
+                    }
+                }
+            } while (info.Key != ConsoleKey.Enter);
+            Console.WriteLine();
+            return password;
         }
     }
 
