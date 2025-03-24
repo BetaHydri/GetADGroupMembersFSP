@@ -50,35 +50,30 @@ namespace GetADGroupMembersFSP
                     return;
                 }
 
-                if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password) && string.IsNullOrEmpty(domain))
+                if (string.IsNullOrEmpty(username))
                 {
-                    Console.WriteLine("Using current authenticated user and domain.");
-                    domain = Environment.UserDomainName;
                     username = Environment.UserName;
-                }
-                else
-                {
                     if (string.IsNullOrEmpty(username))
                     {
-                        username = Environment.UserName;
-                        if (string.IsNullOrEmpty(username))
-                        {
-                            Console.Write("Enter username: ");
-                            username = Console.ReadLine();
-                        }
+                        Console.Write("Enter username: ");
+                        username = Console.ReadLine();
                     }
+                }
 
-                    if (string.IsNullOrEmpty(password))
-                    {
-                        Console.Write("Enter password: ");
-                        password = ReadPassword();
-                    }
-
+                if (string.IsNullOrEmpty(domain))
+                {
+                    domain = Environment.UserDomainName;
                     if (string.IsNullOrEmpty(domain))
                     {
-                        domain = Environment.UserDomainName;
-                        Console.WriteLine($"Using current domain: {domain}");
+                        Console.Write("Enter domain: ");
+                        domain = Console.ReadLine();
                     }
+                }
+
+                if (string.IsNullOrEmpty(password))
+                {
+                    Console.Write("Enter password: ");
+                    password = ReadPassword();
                 }
 
                 // Call the method to get group members
@@ -138,7 +133,7 @@ namespace GetADGroupMembersFSP
                 }
                 else
                 {
-                    ctx = new PrincipalContext(ContextType.Domain, domain);
+                    ctx = new PrincipalContext(ContextType.Domain);
                 }
 
                 using (ctx)
