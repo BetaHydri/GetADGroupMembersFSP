@@ -4,7 +4,7 @@
 GetADGroupMembersFSP is a .NET console application that retrieves members of an Active Directory group. It allows for recursive retrieval of nested group members and can export the results to a CSV file.
 
 ## Features
-- Parse command-line arguments for group name, recursive retrieval, output CSV file, CSV delimiter, username, and password.
+- Parse command-line arguments for group name, recursive retrieval, output CSV file, CSV delimiter, username, password, and domain.
 - Retrieve members of a specified Active Directory group.
 - Optionally retrieve members recursively from nested groups.
 - Export the results to a specified CSV file.
@@ -27,12 +27,12 @@ GetADGroupMembersFSP is a .NET console application that retrieves members of an 
    ```sh
    dotnet publish -c Release -r win-x64 --self-contained
    ```
-## Running the Application
+3. Move the executable file from the `bin\Release\net6.0\win-x64\publish` directory to the main directory of the project.
 
-The executable file is located in `bin\Release\net6.0\win-x64\publish` directory.
+## Running the Application
 To run the application, use the following command format:
 ```sh
-GetADGroupMembersFSP.exe --group-name "YourGroupName" [--recursive] [--output-csv-file "path/to/output.csv"] [--csv-delimiter ","] [--username "username"] [--password "password"]
+GetADGroupMembersFSP.exe --group-name "YourGroupName" [--recursive] [--output-csv-file "path/to/output.csv"] [--csv-delimiter ","] [--username "username"] [--password "password"] [--domain "domain"]
 ```
 
 ### Command-Line Arguments
@@ -42,6 +42,9 @@ GetADGroupMembersFSP.exe --group-name "YourGroupName" [--recursive] [--output-cs
 - `--csv-delimiter`: Optional delimiter for the CSV file (default is a comma).
 - `--username`: Optional username to connect to Active Directory.
 - `--password`: Optional password to connect to Active Directory.
+- `--domain`: Optional domain to connect to Active Directory.
+
+If the `--username`, `--password`, and `--domain` parameters are not provided, the application will use the current authenticated user.
 
 ## Example
 To retrieve members of the group "Sales" and export to a CSV file:

@@ -163,6 +163,10 @@ namespace GetADGroupMembersFSP
                     }
                 }
             }
+            catch (PrincipalOperationException ex)
+            {
+                Console.WriteLine($"Authentication error: {ex.Message}");
+            }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
