@@ -27,9 +27,9 @@ GetADGroupMembersFSP is a .NET console application that retrieves members of an 
    ```sh
    dotnet publish -c Release -r win-x64 --self-contained
    ```
-3. Move the executable file from the `bin\Release\net6.0\win-x64\publish` directory to the main directory of the project.
-
 ## Running the Application
+
+The executable file is located in `bin\Release\net6.0\win-x64\publish` directory.
 To run the application, use the following command format:
 ```sh
 GetADGroupMembersFSP.exe --group-name "YourGroupName" [--recursive] [--output-csv-file "path/to/output.csv"] [--csv-delimiter ","] [--username "username"] [--password "password"]
