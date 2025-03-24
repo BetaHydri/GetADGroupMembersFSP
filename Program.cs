@@ -52,14 +52,20 @@ namespace GetADGroupMembersFSP
 
                 if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password) && string.IsNullOrEmpty(domain))
                 {
-                    Console.WriteLine("Using current authenticated user.");
+                    Console.WriteLine("Using current authenticated user and domain.");
+                    domain = Environment.UserDomainName;
+                    username = Environment.UserName;
                 }
                 else
                 {
                     if (string.IsNullOrEmpty(username))
                     {
-                        Console.Write("Enter username: ");
-                        username = Console.ReadLine();
+                        username = Environment.UserName;
+                        if (string.IsNullOrEmpty(username))
+                        {
+                            Console.Write("Enter username: ");
+                            username = Console.ReadLine();
+                        }
                     }
 
                     if (string.IsNullOrEmpty(password))
@@ -70,8 +76,8 @@ namespace GetADGroupMembersFSP
 
                     if (string.IsNullOrEmpty(domain))
                     {
-                        Console.Write("Enter domain: ");
-                        domain = Console.ReadLine();
+                        domain = Environment.UserDomainName;
+                        Console.WriteLine($"Using current domain: {domain}");
                     }
                 }
 
@@ -132,7 +138,7 @@ namespace GetADGroupMembersFSP
                 }
                 else
                 {
-                    ctx = new PrincipalContext(ContextType.Domain);
+                    ctx = new PrincipalContext(ContextType.Domain, domain);
                 }
 
                 using (ctx)
