@@ -1,0 +1,5 @@
+C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\obj\Debug\net6.0\GetADGroupMembersFSP.csproj.AssemblyReference.cache
+C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\obj\Debug\net6.0\GetADGroupMembersFSP.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\obj\Debug\net6.0\GetADGroupMembersFSP.AssemblyInfoInputs.cache
+C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\obj\Debug\net6.0\GetADGroupMembersFSP.AssemblyInfo.cs
+C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\obj\Debug\net6.0\GetADGroupMembersFSP.csproj.CoreCompileInputs.cache
