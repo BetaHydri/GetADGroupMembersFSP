@@ -31,18 +31,15 @@ namespace GetADGroupMembersFSP
                     "The delimiter to use in the CSV file"),
                 new Option<string>(
                     "--username",
-                    "The username to connect to Active Directory"),
+                    "The username to connect to Active Directory in the form domain\\username"),
                 new Option<string>(
                     "--password",
-                    "The password to connect to Active Directory"),
-                new Option<string>(
-                    "--domain",
-                    "The domain to connect to Active Directory")
+                    "The password to connect to Active Directory")
             };
 
             rootCommand.Description = "GetADGroupMembersFSP - A tool to retrieve members of an Active Directory group and export them to a CSV file.";
 
-            rootCommand.Handler = CommandHandler.Create<string, bool, string, string, string, string, string>((groupName, recursive, outputCsvFile, csvDelimiter, username, password, domain) =>
+            rootCommand.Handler = CommandHandler.Create<string, bool, string, string, string, string>((groupName, recursive, outputCsvFile, csvDelimiter, username, password) =>
             {
                 if (string.IsNullOrEmpty(groupName))
                 {
@@ -51,35 +48,37 @@ namespace GetADGroupMembersFSP
                 }
 
                 PrincipalContext ctx;
+                string domain;
+
                 if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password))
                 {
                     Console.WriteLine("Using current authenticated user context.");
                     WindowsIdentity identity = WindowsIdentity.GetCurrent();
-                    string userDomain = identity.Name.Split('\\')[0];
-                    ctx = new PrincipalContext(ContextType.Domain, userDomain);
+                    domain = identity.Name.Split('\\')[0];
+                    ctx = new PrincipalContext(ContextType.Domain, domain);
                     Console.WriteLine($"Using PrincipalContext with current user: {identity.Name}");
                 }
                 else
                 {
                     if (string.IsNullOrEmpty(username))
                     {
-                        username = Environment.UserName;
+                        username = $"{Environment.UserDomainName}\\{Environment.UserName}";
                         if (string.IsNullOrEmpty(username))
                         {
-                            Console.Write("Enter username: ");
+                            Console.Write("Enter username (domain\\username): ");
                             username = Console.ReadLine();
                         }
                     }
 
-                    if (string.IsNullOrEmpty(domain))
+                    var usernameParts = username.Split('\\');
+                    if (usernameParts.Length != 2)
                     {
-                        domain = Environment.UserDomainName;
-                        if (string.IsNullOrEmpty(domain))
-                        {
-                            Console.Write("Enter domain: ");
-                            domain = Console.ReadLine();
-                        }
+                        Console.WriteLine("Username must be in the form domain\\username.");
+                        return;
                     }
+
+                    domain = usernameParts[0];
+                    username = usernameParts[1];
 
                     if (string.IsNullOrEmpty(password))
                     {

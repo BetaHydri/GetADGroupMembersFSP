@@ -4,7 +4,7 @@
 GetADGroupMembersFSP is a .NET console application that retrieves members of an Active Directory group. It allows for recursive retrieval of nested group members and can export the results to a CSV file.
 
 ## Features
-- Parse command-line arguments for group name, recursive retrieval, output CSV file, CSV delimiter, username, password, and domain.
+- Parse command-line arguments for group name, recursive retrieval, output CSV file, CSV delimiter, username, and password.
 - Retrieve members of a specified Active Directory group.
 - Optionally retrieve members recursively from nested groups.
 - Export the results to a specified CSV file.
