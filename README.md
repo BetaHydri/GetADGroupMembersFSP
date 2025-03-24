@@ -32,7 +32,7 @@ GetADGroupMembersFSP is a .NET console application that retrieves members of an 
 ## Running the Application
 To run the application, use the following command format:
 ```sh
-GetADGroupMembersFSP.exe --group-name "YourGroupName" [--recursive] [--output-csv-file "path/to/output.csv"] [--csv-delimiter ","] [--username "username"] [--password "password"] [--domain "domain"]
+GetADGroupMembersFSP.exe --group-name "YourGroupName" [--recursive] [--output-csv-file "path/to/output.csv"] [--csv-delimiter ","] [--username "domain\\username"] [--password "password"]
 ```
 
 ### Command-Line Arguments
@@ -40,11 +40,10 @@ GetADGroupMembersFSP.exe --group-name "YourGroupName" [--recursive] [--output-cs
 - `--recursive`: Optional flag to retrieve members recursively from nested groups.
 - `--output-csv-file`: Optional path to save the output as a CSV file.
 - `--csv-delimiter`: Optional delimiter for the CSV file (default is a comma).
-- `--username`: Optional username to connect to Active Directory.
+- `--username`: Optional username to connect to Active Directory in the form `domain\\username`.
 - `--password`: Optional password to connect to Active Directory.
-- `--domain`: Optional domain to connect to Active Directory.
 
-If the `--username`, `--password`, and `--domain` parameters are not provided, the application will use the current authenticated user context.
+If the `--username` and `--password` parameters are not provided, the application will use the current authenticated user context.
 
 ## Example
 To retrieve members of the group "Sales" and export to a CSV file:
