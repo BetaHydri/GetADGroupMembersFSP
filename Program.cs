@@ -50,42 +50,42 @@ namespace GetADGroupMembersFSP
                 PrincipalContext ctx;
                 string domain;
 
-                if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password))
+                if (string.IsNullOrEmpty(username))
                 {
-                    Console.WriteLine("Using current authenticated user context.");
-                    WindowsIdentity identity = WindowsIdentity.GetCurrent();
-                    domain = identity.Name.Split('\\')[0];
-                    ctx = new PrincipalContext(ContextType.Domain, domain);
-                    Console.WriteLine($"Using PrincipalContext with current user: {identity.Name}");
-                }
-                else
-                {
+                    username = $"{Environment.UserDomainName}\\{Environment.UserName}";
                     if (string.IsNullOrEmpty(username))
                     {
-                        username = $"{Environment.UserDomainName}\\{Environment.UserName}";
-                        if (string.IsNullOrEmpty(username))
-                        {
-                            Console.Write("Enter username (domain\\username): ");
-                            username = Console.ReadLine();
-                        }
+                        Console.Write("Enter username (domain\\username): ");
+                        username = Console.ReadLine();
                     }
+                }
 
-                    var usernameParts = username.Split('\\');
-                    if (usernameParts.Length != 2)
-                    {
-                        Console.WriteLine("Username must be in the form domain\\username.");
-                        return;
-                    }
+                var usernameParts = username.Split('\\');
+                if (usernameParts.Length != 2)
+                {
+                    Console.WriteLine("Username must be in the form domain\\username.");
+                    return;
+                }
 
-                    domain = usernameParts[0];
-                    username = usernameParts[1];
+                domain = usernameParts[0];
+                username = usernameParts[1];
 
-                    if (string.IsNullOrEmpty(password))
-                    {
-                        Console.Write("Enter password: ");
-                        password = ReadPassword();
-                    }
+                if (string.IsNullOrEmpty(password))
+                {
+                    Console.Write("Enter password: ");
+                    password = ReadPassword();
+                }
 
+                try
+                {
+                    ctx = new PrincipalContext(ContextType.Domain, domain, username, password);
+                    Console.WriteLine($"Using PrincipalContext with domain: {domain}, username: {username}");
+                }
+                catch (PrincipalOperationException ex)
+                {
+                    Console.WriteLine($"Authentication error: {ex.Message}");
+                    Console.Write("Enter password: ");
+                    password = ReadPassword();
                     ctx = new PrincipalContext(ContextType.Domain, domain, username, password);
                     Console.WriteLine($"Using PrincipalContext with domain: {domain}, username: {username}");
                 }
