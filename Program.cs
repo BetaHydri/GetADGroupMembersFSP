@@ -56,6 +56,7 @@ namespace GetADGroupMembersFSP
                     Console.WriteLine("Using current authenticated user context.");
                     WindowsIdentity identity = WindowsIdentity.GetCurrent();
                     ctx = new PrincipalContext(ContextType.Domain, identity.Name.Split('\\')[0]);
+                    Console.WriteLine($"Using PrincipalContext with current user: {identity.Name}");
                 }
                 else
                 {
@@ -86,6 +87,7 @@ namespace GetADGroupMembersFSP
                     }
 
                     ctx = new PrincipalContext(ContextType.Domain, domain, username, password);
+                    Console.WriteLine($"Using PrincipalContext with domain: {domain}, username: {username}");
                 }
 
                 // Call the method to get group members
