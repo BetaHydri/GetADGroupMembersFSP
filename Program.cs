@@ -54,9 +54,8 @@ namespace GetADGroupMembersFSP
                 if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password))
                 {
                     Console.WriteLine("Using current authenticated user context.");
-                    WindowsIdentity identity = WindowsIdentity.GetCurrent();
-                    ctx = new PrincipalContext(ContextType.Domain, identity.Name.Split('\\')[0]);
-                    Console.WriteLine($"Using PrincipalContext with current user: {identity.Name}");
+                    ctx = new PrincipalContext(ContextType.Domain);
+                    Console.WriteLine($"Using PrincipalContext with current user: {WindowsIdentity.GetCurrent().Name}");
                 }
                 else
                 {
