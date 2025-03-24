@@ -44,7 +44,7 @@ GetADGroupMembersFSP.exe --group-name "YourGroupName" [--recursive] [--output-cs
 - `--password`: Optional password to connect to Active Directory.
 - `--domain`: Optional domain to connect to Active Directory.
 
-If the `--username`, `--password`, and `--domain` parameters are not provided, the application will use the current authenticated user.
+If the `--username`, `--password`, and `--domain` parameters are not provided, the application will use the current authenticated user context.
 
 ## Example
 To retrieve members of the group "Sales" and export to a CSV file:

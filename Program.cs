@@ -50,34 +50,45 @@ namespace GetADGroupMembersFSP
                     return;
                 }
 
-                if (string.IsNullOrEmpty(username))
+                PrincipalContext ctx;
+                if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password) && string.IsNullOrEmpty(domain))
                 {
-                    username = Environment.UserName;
+                    Console.WriteLine("Using current authenticated user context.");
+                    ctx = new PrincipalContext(ContextType.Domain);
+                }
+                else
+                {
                     if (string.IsNullOrEmpty(username))
                     {
-                        Console.Write("Enter username: ");
-                        username = Console.ReadLine();
+                        username = Environment.UserName;
+                        if (string.IsNullOrEmpty(username))
+                        {
+                            Console.Write("Enter username: ");
+                            username = Console.ReadLine();
+                        }
                     }
-                }
 
-                if (string.IsNullOrEmpty(domain))
-                {
-                    domain = Environment.UserDomainName;
                     if (string.IsNullOrEmpty(domain))
                     {
-                        Console.Write("Enter domain: ");
-                        domain = Console.ReadLine();
+                        domain = Environment.UserDomainName;
+                        if (string.IsNullOrEmpty(domain))
+                        {
+                            Console.Write("Enter domain: ");
+                            domain = Console.ReadLine();
+                        }
                     }
-                }
 
-                if (string.IsNullOrEmpty(password))
-                {
-                    Console.Write("Enter password: ");
-                    password = ReadPassword();
+                    if (string.IsNullOrEmpty(password))
+                    {
+                        Console.Write("Enter password: ");
+                        password = ReadPassword();
+                    }
+
+                    ctx = new PrincipalContext(ContextType.Domain, domain, username, password);
                 }
 
                 // Call the method to get group members
-                var members = GetGroupMembers(groupName, recursive, username, password, domain);
+                var members = GetGroupMembers(groupName, recursive, ctx);
 
                 // Export to CSV if specified
                 if (!string.IsNullOrEmpty(outputCsvFile))
@@ -121,21 +132,11 @@ namespace GetADGroupMembersFSP
             return rootCommand.InvokeAsync(args).Result;
         }
 
-        static List<GroupMember> GetGroupMembers(string groupName, bool recursive, string username, string password, string domain)
+        static List<GroupMember> GetGroupMembers(string groupName, bool recursive, PrincipalContext ctx)
         {
             List<GroupMember> members = new List<GroupMember>();
             try
             {
-                PrincipalContext ctx;
-                if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password) && !string.IsNullOrEmpty(domain))
-                {
-                    ctx = new PrincipalContext(ContextType.Domain, domain, username, password);
-                }
-                else
-                {
-                    ctx = new PrincipalContext(ContextType.Domain);
-                }
-
                 using (ctx)
                 {
                     GroupPrincipal group = GroupPrincipal.FindByIdentity(ctx, groupName);
