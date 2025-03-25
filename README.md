@@ -8,7 +8,7 @@ GetADGroupMembersFSP is a .NET console application that retrieves members of an 
 - Retrieve members of a specified Active Directory group.
 - Optionally retrieve members recursively from nested groups.
 - Export the results to a specified CSV file.
-- Display additional information such as the domain name, group name, total members, and unique members.
+- Display additional information such as the domain name, group name, total members, unique members, and direct group memberships.
 - Prompt for credentials if not provided and handle authentication errors.
 
 ## Prerequisites
@@ -61,6 +61,7 @@ The tool will display the following information in the console:
 - Group Name
 - Total Members
 - Unique Members
+- Direct Group Memberships
 
 Unique members will be displayed in green, and members with multiple memberships will be displayed in yellow.
 
@@ -72,7 +73,9 @@ Group Name: Domain Users
 Total Members: 150
 Unique Members: 140
 CN=John Doe,OU=Users,DC=example,DC=com, user, example\jdoe (Memberships: 1)
+Direct Groups: Domain Users
 CN=Jane Smith,OU=Users,DC=example,DC=com, user, example\jsmith (Memberships: 2)
+Direct Groups: Domain Users, Sales
 ...
 ```
 
@@ -84,13 +87,14 @@ The CSV file will contain the following columns:
 - ObjectClass
 - NTAccountName
 - MembershipCount
+- DirectGroups
 
 #### Sample CSV Content
 
 ```
-DistinguishedName,ObjectClass,NTAccountName,MembershipCount
-CN=John Doe,OU=Users,DC=example,DC=com,user,example\jdoe,1
-CN=Jane Smith,OU=Users,DC=example,DC=com,user,example\jsmith,2
+DistinguishedName,ObjectClass,NTAccountName,MembershipCount,DirectGroups
+CN=John Doe,OU=Users,DC=example,DC=com,user,example\jdoe,1,Domain Users
+CN=Jane Smith,OU=Users,DC=example,DC=com,user,example\jsmith,2,Domain Users|Sales
 ...
 
 ## License

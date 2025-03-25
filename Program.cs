@@ -77,14 +77,6 @@ namespace GetADGroupMembersFSP
                     ctx = new PrincipalContext(ContextType.Domain, domain, username, password);
                     Console.WriteLine($"Using PrincipalContext with domain: {domain}, username: {username}");
                 }
-                catch (PrincipalOperationException ex)
-                {
-                    Console.WriteLine($"Authentication error: {ex.Message}");
-                    Console.Write("Enter password: ");
-                    password = ReadPassword();
-                    ctx = new PrincipalContext(ContextType.Domain, domain, username, password);
-                    Console.WriteLine($"Using PrincipalContext with domain: {domain}, username: {username}");
-                }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Error: {ex.Message}");
@@ -111,19 +103,27 @@ namespace GetADGroupMembersFSP
                 // Display the results
                 Console.WriteLine($"Domain Name: {GetDomainName()}");
                 Console.WriteLine($"Group Name: {groupName}");
-                Console.WriteLine($"Total Members: {members.Count}");
 
+                var totalMembers = members.Sum(m => m.DirectGroups.Count);
                 var uniqueMembers = members
                     .GroupBy(m => m.DistinguishedName)
                     .Select(g => new
                     {
                         Member = g.First(),
-                        Count = g.Count()
+                        Count = g.First().DirectGroups.Count
                     })
                     .ToList();
 
+                Console.WriteLine($"Total Members: {totalMembers}");
                 Console.WriteLine($"Unique Members: {uniqueMembers.Count}");
 
+                var maxDistinguishedNameLength = uniqueMembers.Max(m => m.Member.DistinguishedName.Length);
+                var maxObjectClassLength = uniqueMembers.Max(m => m.Member.ObjectClass.Length);
+                var maxNTAccountNameLength = uniqueMembers.Max(m => m.Member.NTAccount.Length);
+                var maxDirectGroupsLength = uniqueMembers.Max(m => string.Join(", ", m.Member.DirectGroups).Length);
+
+                Console.WriteLine($"| {"DistinguishedName".PadRight(maxDistinguishedNameLength)} | {"Class".PadRight(maxObjectClassLength)} | {"NTAccountName".PadRight(maxNTAccountNameLength)} | MembershipCount| {"DirectGroups".PadRight(maxDirectGroupsLength)} |");
+                Console.WriteLine($"|{new string('-', maxDistinguishedNameLength + 2)}|{new string('-', maxObjectClassLength + 2)}|{new string('-', maxNTAccountNameLength + 2)}|----------------|{new string('-', maxDirectGroupsLength + 2)}|");
                 foreach (var member in uniqueMembers)
                 {
                     if (member.Count > 1)
@@ -134,7 +134,7 @@ namespace GetADGroupMembersFSP
                     {
                         Console.ForegroundColor = ConsoleColor.Green;
                     }
-                    Console.WriteLine($"{member.Member.DistinguishedName}, {member.Member.ObjectClass}, {member.Member.NTAccount} (Memberships: {member.Count})");
+                    Console.WriteLine($"| {member.Member.DistinguishedName.PadRight(maxDistinguishedNameLength)} | {member.Member.ObjectClass.PadRight(maxObjectClassLength)} | {member.Member.NTAccount.PadRight(maxNTAccountNameLength)} | {member.Count.ToString().PadRight(14)} | {string.Join(", ", member.Member.DirectGroups).PadRight(maxDirectGroupsLength)} |");
                 }
 
                 // Reset the console color
@@ -188,21 +188,39 @@ namespace GetADGroupMembersFSP
             return members;
         }
 
-        static void GetGroupMembersRecursive(GroupPrincipal group, List<GroupMember> members)
+        static void GetGroupMembersRecursive(GroupPrincipal group, List<GroupMember> members, List<string> parentGroups = null)
         {
+            if (parentGroups == null)
+            {
+                parentGroups = new List<string>();
+            }
+            parentGroups.Add(group.Name);
+
             foreach (Principal p in group.GetMembers())
             {
-                members.Add(new GroupMember
+                var member = members.FirstOrDefault(m => m.DistinguishedName == p.DistinguishedName);
+                if (member == null)
                 {
-                    DistinguishedName = p.DistinguishedName,
-                    ObjectClass = p.StructuralObjectClass,
-                    NTAccount = ResolveNTAccount(p)
-                });
+                    member = new GroupMember
+                    {
+                        DistinguishedName = p.DistinguishedName,
+                        ObjectClass = p.StructuralObjectClass,
+                        NTAccount = ResolveNTAccount(p),
+                        DirectGroups = new List<string> { group.Name }
+                    };
+                    members.Add(member);
+                }
+                else
+                {
+                    member.DirectGroups.Add(group.Name);
+                }
+
                 if (p is GroupPrincipal nestedGroup)
                 {
-                    GetGroupMembersRecursive(nestedGroup, members);
+                    GetGroupMembersRecursive(nestedGroup, members, parentGroups);
                 }
             }
+            parentGroups.Remove(group.Name);
         }
 
         static string ResolveNTAccount(Principal principal)
@@ -253,16 +271,16 @@ namespace GetADGroupMembersFSP
                 .Select(g => new
                 {
                     Member = g.First(),
-                    Count = g.Count()
+                    Count = g.First().DirectGroups.Count
                 })
                 .ToList();
 
             using (var writer = new StreamWriter(filePath))
             {
-                writer.WriteLine($"DistinguishedName{delimiter}ObjectClass{delimiter}NTAccountName{delimiter}MembershipCount");
+                writer.WriteLine($"DistinguishedName{delimiter}ObjectClass{delimiter}NTAccountName{delimiter}MembershipCount{delimiter}DirectGroups");
                 foreach (var member in uniqueMembers)
                 {
-                    writer.WriteLine($"{member.Member.DistinguishedName}{delimiter}{member.Member.ObjectClass}{delimiter}{member.Member.NTAccount}{delimiter}{member.Count}");
+                    writer.WriteLine($"{member.Member.DistinguishedName}{delimiter}{member.Member.ObjectClass}{delimiter}{member.Member.NTAccount}{delimiter}{member.Count}{delimiter}{string.Join("|", member.Member.DirectGroups)}");
                 }
             }
         }
@@ -311,5 +329,6 @@ namespace GetADGroupMembersFSP
         public string DistinguishedName { get; set; }
         public string ObjectClass { get; set; }
         public string NTAccount { get; set; }
+        public List<string> DirectGroups { get; set; } = new List<string>();
     }
 }
