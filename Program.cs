@@ -98,7 +98,15 @@ namespace GetADGroupMembersFSP
                 // Export to CSV if specified
                 if (!string.IsNullOrEmpty(outputCsvFile))
                 {
-                    ExportToCsv(members, outputCsvFile, csvDelimiter);
+                    try
+                    {
+                        ExportToCsv(members, outputCsvFile, csvDelimiter);
+                    }
+                    catch (UnauthorizedAccessException ex)
+                    {
+                        Console.WriteLine($"Unauthorized access error: {ex.Message}");
+                        return;
+                    }
                 }
 
                 // Display the results

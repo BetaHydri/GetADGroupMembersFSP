@@ -40,8 +40,9 @@ GetADGroupMembersFSP.exe --group-name "YourGroupName" [--recursive] [--output-cs
 - `--recursive`: Optional flag to retrieve members recursively from nested groups.
 - `--output-csv-file`: Optional path to save the output as a CSV file.
 - `--csv-delimiter`: Optional delimiter for the CSV file (default is a comma).
-- `--username`: Optional username to connect to Active Directory in the form `domain\\username`.
+- `--username`: Optional username to connect to Active Directory in the form `username`.
 - `--password`: Optional password to connect to Active Directory.
+- `--domain`: Optional domain to connect to Active Directory.
 
 If the `--username` and `--password` parameters are not provided, the application will use the current authenticated user context. If the authentication fails, the user will be prompted to enter the password again.
 
@@ -90,7 +91,6 @@ DistinguishedName,ObjectClass,NTAccountName,MembershipCount
 CN=John Doe,OU=Users,DC=example,DC=com,user,example\jdoe,1
 CN=Jane Smith,OU=Users,DC=example,DC=com,user,example\jsmith,2
 ...
-```
 
 ## License
 This project is licensed under the MIT License. See the LICENSE file for details.
