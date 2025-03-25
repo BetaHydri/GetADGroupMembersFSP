@@ -32,7 +32,7 @@ GetADGroupMembersFSP is a .NET console application that retrieves members of an 
 ## Running the Application
 To run the application, use the following command format:
 ```sh
-GetADGroupMembersFSP.exe --group-name "YourGroupName" [--recursive] [--output-csv-file "path/to/output.csv"] [--csv-delimiter ","] [--username "domain\\username"] [--password "password"]
+GetADGroupMembersFSP.exe --group-name "YourGroupName" [--recursive] [--output-csv-file "path/to/output.csv"] [--csv-delimiter ","] [--username "username"] [--password "password"] [--domain "domainname"]
 ```
 
 ### Command-Line Arguments
