@@ -67,17 +67,15 @@ Unique members will be displayed in green, and members with multiple memberships
 
 ### Sample Console Output
 
-```
 Domain Name: example.com
 Group Name: Domain Users
 Total Members: 150
 Unique Members: 140
-CN=John Doe,OU=Users,DC=example,DC=com, user, example\jdoe (Memberships: 1)
-Direct Groups: Domain Users
-CN=Jane Smith,OU=Users,DC=example,DC=com, user, example\jsmith (Memberships: 2)
-Direct Groups: Domain Users, Sales
-...
-```
+| DistinguishedName | Class | NTAccountName | MembershipCount| DirectGroups |
+|-------------------|-------|---------------|----------------|--------------|
+| CN=John Doe,OU=Users,DC=example,DC=com | user | example\jdoe | 1 | Domain Users |
+| CN=Jane Smith,OU=Users,DC=example,DC=com | user | example\jsmith | 2 | Domain Users, Sales |
+
 
 ### Sample CSV Output
 
@@ -95,7 +93,7 @@ The CSV file will contain the following columns:
 DistinguishedName,ObjectClass,NTAccountName,MembershipCount,DirectGroups
 CN=John Doe,OU=Users,DC=example,DC=com,user,example\jdoe,1,Domain Users
 CN=Jane Smith,OU=Users,DC=example,DC=com,user,example\jsmith,2,Domain Users|Sales
-...
+```
 
 ## License
 This project is licensed under the MIT License. See the LICENSE file for details.
