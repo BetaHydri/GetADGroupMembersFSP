@@ -31,15 +31,18 @@ namespace GetADGroupMembersFSP
                     "The delimiter to use in the CSV file"),
                 new Option<string>(
                     "--username",
-                    "The username to connect to Active Directory in the form domain\\username"),
+                    "The username to connect to Active Directory in the form username"),
                 new Option<string>(
                     "--password",
-                    "The password to connect to Active Directory")
+                    "The password to connect to Active Directory"),
+                new Option<string>(
+                    "--domain",
+                    "The domain to connect to Active Directory")
             };
 
             rootCommand.Description = "GetADGroupMembersFSP - A tool to retrieve members of an Active Directory group and export them to a CSV file.";
 
-            rootCommand.Handler = CommandHandler.Create<string, bool, string, string, string, string>((groupName, recursive, outputCsvFile, csvDelimiter, username, password) =>
+            rootCommand.Handler = CommandHandler.Create<string, bool, string, string, string, string, string>((groupName, recursive, outputCsvFile, csvDelimiter, username, password, domain) =>
             {
                 if (string.IsNullOrEmpty(groupName))
                 {
@@ -48,27 +51,26 @@ namespace GetADGroupMembersFSP
                 }
 
                 PrincipalContext ctx;
-                string domain;
 
                 if (string.IsNullOrEmpty(username))
                 {
-                    username = $"{Environment.UserDomainName}\\{Environment.UserName}";
+                    username = Environment.UserName;
                     if (string.IsNullOrEmpty(username))
                     {
-                        Console.Write("Enter username (domain\\username): ");
+                        Console.Write("Enter username: ");
                         username = Console.ReadLine();
                     }
                 }
 
-                var usernameParts = username.Split('\\');
-                if (usernameParts.Length != 2)
+                if (string.IsNullOrEmpty(domain))
                 {
-                    Console.WriteLine("Username must be in the form domain\\username.");
-                    return;
+                    domain = Environment.UserDomainName;
+                    if (string.IsNullOrEmpty(domain))
+                    {
+                        Console.Write("Enter domain: ");
+                        domain = Console.ReadLine();
+                    }
                 }
-
-                domain = usernameParts[0];
-                username = usernameParts[1];
 
                 if (string.IsNullOrEmpty(password))
                 {
