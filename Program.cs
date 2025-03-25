@@ -54,14 +54,14 @@ namespace GetADGroupMembersFSP
 
                 if (string.IsNullOrEmpty(username))
                 {
-                    username = Environment.UserName;
-                    if (string.IsNullOrEmpty(username))
-                    {
-                        Console.Write("Enter username: ");
-                        username = Console.ReadLine();
-                    }
+                    Console.Write("Enter username: ");
+                    username = Console.ReadLine();
+                }    
+                if (string.IsNullOrEmpty(password))   
+                { 
+                    Console.Write("Enter password: ");
+                    password = ReadPassword();
                 }
-
                 if (string.IsNullOrEmpty(domain))
                 {
                     domain = Environment.UserDomainName;
@@ -70,12 +70,6 @@ namespace GetADGroupMembersFSP
                         Console.Write("Enter domain: ");
                         domain = Console.ReadLine();
                     }
-                }
-
-                if (string.IsNullOrEmpty(password))
-                {
-                    Console.Write("Enter password: ");
-                    password = ReadPassword();
                 }
 
                 try
@@ -90,6 +84,11 @@ namespace GetADGroupMembersFSP
                     password = ReadPassword();
                     ctx = new PrincipalContext(ContextType.Domain, domain, username, password);
                     Console.WriteLine($"Using PrincipalContext with domain: {domain}, username: {username}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error: {ex.Message}");
+                    return;
                 }
 
                 // Call the method to get group members

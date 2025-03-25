@@ -1,14 +1,15 @@
 # GetADGroupMembersFSP
 
 ## Overview
-GetADGroupMembersFSP is a .NET console application that retrieves members of an Active Directory group. It allows for recursive retrieval of nested group members and can export the results to a CSV file.
+GetADGroupMembersFSP is a .NET console application that retrieves members of an Active Directory group. It allows for recursive retrieval of nested group members and can export the results to a CSV file. The application can prompt for credentials if not provided and handle authentication errors.
 
 ## Features
-- Parse command-line arguments for group name, recursive retrieval, output CSV file, CSV delimiter, username, and password.
+- Parse command-line arguments for group name, recursive retrieval, output CSV file, CSV delimiter, username, password, and domain.
 - Retrieve members of a specified Active Directory group.
 - Optionally retrieve members recursively from nested groups.
 - Export the results to a specified CSV file.
 - Display additional information such as the domain name, group name, total members, and unique members.
+- Prompt for credentials if not provided and handle authentication errors.
 
 ## Prerequisites
 - .NET SDK installed on your machine.
@@ -44,7 +45,7 @@ GetADGroupMembersFSP.exe --group-name "YourGroupName" [--recursive] [--output-cs
 - `--password`: Optional password to connect to Active Directory.
 - `--domain`: Optional domain to connect to Active Directory.
 
-If the `--username` and `--password` parameters are not provided, the application will use the current authenticated user context. If the authentication fails, the user will be prompted to enter the password again.
+If the `--username` and `--password` parameters are not provided, the application will prompt for credentials. If the authentication fails, the user will be prompted to enter the password again.
 
 ## Example
 To retrieve members of the group "Sales" and export to a CSV file:

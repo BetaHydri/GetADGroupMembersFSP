@@ -1,0 +1,2 @@
+C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\bin\Debug\net6.0\win-x64\publish\GetADGroupMembersFSP.pdb
+C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\bin\Debug\net6.0\win-x64\publish\GetADGroupMembersFSP.exe
