@@ -1186,7 +1186,7 @@
     "net6.0": [
       "Microsoft.NET.ILLink.Analyzers >= 7.0.100-1.23401.1",
       "Microsoft.NET.ILLink.Tasks >= 7.0.100-1.23401.1",
-      "System.CommandLine >= 2.0.0-beta1",
+      "System.CommandLine >= 2.0.0-beta1.20071.2",
       "System.DirectoryServices >= 5.0.0",
       "System.DirectoryServices.AccountManagement >= 5.0.0"
     ]
@@ -1247,7 +1247,7 @@
           },
           "System.CommandLine": {
             "target": "Package",
-            "version": "[2.0.0-beta1, )"
+            "version": "[2.0.0-beta1.20071.2, )"
           },
           "System.DirectoryServices": {
             "target": "Package",
@@ -1312,18 +1312,5 @@
         "#import": []
       }
     }
-  },
-  "logs": [
-    {
-      "code": "NU1603",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "GetADGroupMembersFSP depends on System.CommandLine (>= 2.0.0-beta1) but System.CommandLine 2.0.0-beta1 was not found. An approximate best match of System.CommandLine 2.0.0-beta1.20071.2 was resolved.",
-      "libraryId": "System.CommandLine",
-      "targetGraphs": [
-        "net6.0",
-        "net6.0/win-x64"
-      ]
-    }
-  ]
+  }
 }

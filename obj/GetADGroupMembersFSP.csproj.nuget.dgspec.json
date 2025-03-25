@@ -57,7 +57,7 @@
             },
             "System.CommandLine": {
               "target": "Package",
-              "version": "[2.0.0-beta1, )"
+              "version": "[2.0.0-beta1.20071.2, )"
             },
             "System.DirectoryServices": {
               "target": "Package",
