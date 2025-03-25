@@ -99,3 +99,9 @@ CN=Jane Smith,OU=Users,DC=example,DC=com,user,example\jsmith,2,Domain Users|Sale
 
 ## License
 This project is licensed under the MIT License. See the LICENSE file for details.
+
+## Author
+
+**Jan Tiedemann**
+
+- GitHub: [Jan Tiedemann](https://github.com/betahydri)
