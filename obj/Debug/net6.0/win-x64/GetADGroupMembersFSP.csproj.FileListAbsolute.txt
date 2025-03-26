@@ -4,6 +4,7 @@ C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\bin\Debug\net6
 C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\bin\Debug\net6.0\win-x64\GetADGroupMembersFSP.dll
 C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\bin\Debug\net6.0\win-x64\GetADGroupMembersFSP.pdb
 C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\bin\Debug\net6.0\win-x64\Microsoft.Win32.SystemEvents.dll
+C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\bin\Debug\net6.0\win-x64\System.CommandLine.dll
 C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\bin\Debug\net6.0\win-x64\System.Configuration.ConfigurationManager.dll
 C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\bin\Debug\net6.0\win-x64\System.DirectoryServices.dll
 C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\bin\Debug\net6.0\win-x64\System.DirectoryServices.AccountManagement.dll
@@ -239,11 +240,10 @@ C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\obj\Debug\net6
 C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\obj\Debug\net6.0\win-x64\GetADGroupMembersFSP.AssemblyInfoInputs.cache
 C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\obj\Debug\net6.0\win-x64\GetADGroupMembersFSP.AssemblyInfo.cs
 C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\obj\Debug\net6.0\win-x64\GetADGroupMembersFSP.csproj.CoreCompileInputs.cache
+C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\obj\Debug\net6.0\win-x64\GetADGroupMembersFSP.sourcelink.json
 C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\obj\Debug\net6.0\win-x64\GetADGro.BC423A23.Up2Date
 C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\obj\Debug\net6.0\win-x64\GetADGroupMembersFSP.dll
 C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\obj\Debug\net6.0\win-x64\refint\GetADGroupMembersFSP.dll
 C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\obj\Debug\net6.0\win-x64\GetADGroupMembersFSP.pdb
 C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\obj\Debug\net6.0\win-x64\GetADGroupMembersFSP.genruntimeconfig.cache
 C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\obj\Debug\net6.0\win-x64\ref\GetADGroupMembersFSP.dll
-C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\bin\Debug\net6.0\win-x64\System.CommandLine.dll
-C:\Users\jantiede\OneDrive\Develop\DotNET\C#\GetADGroupMembersFSP\obj\Debug\net6.0\win-x64\GetADGroupMembersFSP.sourcelink.json

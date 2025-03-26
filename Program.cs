@@ -7,6 +7,7 @@ using System.DirectoryServices;
 using System.IO;
 using System.Linq;
 using System.Security.Principal;
+using System.Threading.Tasks.Dataflow;
 
 namespace GetADGroupMembersFSP
 {
@@ -64,29 +65,13 @@ namespace GetADGroupMembersFSP
                         throw new Exception("Unable to determine the current domain name.");
                     }
 
-                    // Use provided username and password if available
-                    if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
-                    {
-                        ctx = new PrincipalContext(ContextType.Domain, currentDomain, username, password);
-                        Console.WriteLine("PrincipalContext created successfully using provided credentials.");
+                    // Use current Windows identity if no credentials are provided
+                    ctx = new PrincipalContext(ContextType.Domain, currentDomain);
+                    Console.WriteLine("PrincipalContext created successfully using current Windows identity.");
 
-                        // Validate the provided credentials
-                        if (!ctx.ValidateCredentials(username, password, ContextOptions.Negotiate))
-                        {
-                            throw new Exception("Validation of provided credentials failed.");
-                        }
-                        Console.WriteLine("Validation of provided credentials succeeded.");
-                    }
-                    else if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password))
-                    {
-                        // Use current Windows identity if no credentials are provided
-                        ctx = new PrincipalContext(ContextType.Domain, currentDomain, null, ContextOptions.Negotiate);
-                        Console.WriteLine("PrincipalContext created successfully using current Windows identity.");
-                    }
-                    else
-                    {
-                        throw new Exception("The user name and password must either both be null or both must be non-null.");
-                    }
+                    // Log the current Windows identity
+                    var currentIdentity = System.Security.Principal.WindowsIdentity.GetCurrent();
+                    Console.WriteLine($"Current Windows Identity: {currentIdentity.Name}");
                 }
                 catch (Exception ex)
                 {
@@ -168,9 +153,17 @@ namespace GetADGroupMembersFSP
                     if (group != null)
                     {
                         Console.WriteLine($"Group '{groupName}' found.");
+                        Console.WriteLine($"Distinguished Name of the group: {group.DistinguishedName}");
+
                         if (recursive)
                         {
                             Console.WriteLine("Retrieving members recursively.");
+                            Console.WriteLine("Listing all direct members in the initial group:");
+                            foreach (Principal p in group.GetMembers(false))
+                            {
+                                Console.WriteLine($"Direct Member: {p.DistinguishedName}, ObjectClass: {p.StructuralObjectClass}");
+                            }
+                            Console.WriteLine("Proceeding with recursive enumeration of nested members.");
                             GetGroupMembersRecursive(group, members);
                         }
                         else
@@ -179,41 +172,7 @@ namespace GetADGroupMembersFSP
                             foreach (Principal p in group.GetMembers())
                             {
                                 Console.WriteLine($"Found member: {p.DistinguishedName}");
-                                if (p is AuthenticablePrincipal authPrincipal && authPrincipal.StructuralObjectClass == "foreignsecurityprincipal")
-                                {
-                                    Console.WriteLine($"ForeignSecurityPrincipal detected: {p.DistinguishedName}");
-                                    string domain = ParseDomainFromDistinguishedName(p.DistinguishedName);
-                                    Console.WriteLine($"Domain: {domain}");
-
-                                    Console.Write("Enter username for foreign domain: ");
-                                    string username = Console.ReadLine();
-
-                                    Console.Write("Enter password for foreign domain: ");
-                                    string password = ReadPassword();
-
-                                    try
-                                    {
-                                        using (PrincipalContext foreignCtx = new PrincipalContext(ContextType.Domain, domain, username, password))
-                                        {
-                                            if (foreignCtx.ValidateCredentials(username, password))
-                                            {
-                                                members.Add(CreateGroupMember(p, group.Name));
-                                            }
-                                            else
-                                            {
-                                                Console.WriteLine("Invalid credentials for the foreign domain.");
-                                            }
-                                        }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Console.WriteLine($"Error connecting to foreign domain: {ex.Message}");
-                                    }
-                                }
-                                else
-                                {
-                                    members.Add(CreateGroupMember(p, group.Name));
-                                }
+                                members.Add(CreateGroupMember(p, group.Name));
                             }
                         }
                     }
@@ -242,10 +201,21 @@ namespace GetADGroupMembersFSP
             }
             parentGroups.Add(group.Name);
 
+            string initialGroupDomain = ParseDomainFromDistinguishedName(group.DistinguishedName);
+
             foreach (Principal p in group.GetMembers())
             {
                 try
                 {
+                    string memberDomain = ParseDomainFromDistinguishedName(p.DistinguishedName);
+
+                    if (!string.Equals(initialGroupDomain, memberDomain, StringComparison.OrdinalIgnoreCase) || p.StructuralObjectClass == "foreignsecurityprincipal")
+                    {
+                        Console.WriteLine($"Foreign member or placeholder detected: {p.DistinguishedName} from domain {memberDomain}");
+                        HandleForeignSecurityPrincipal(p, members, group.Name);
+                        continue;
+                    }
+
                     GroupMember member = members.FirstOrDefault(m => m.DistinguishedName == p.DistinguishedName);
                     if (member == null)
                     {
@@ -277,27 +247,22 @@ namespace GetADGroupMembersFSP
 
         static GroupMember CreateGroupMember(Principal principal, string groupName)
         {
-            GroupMember member = new GroupMember
+            var member = new GroupMember
             {
                 DistinguishedName = principal.DistinguishedName,
                 ObjectClass = principal.StructuralObjectClass,
-                NTAccount = principal.StructuralObjectClass == "foreignsecurityprincipal" ? ResolveForeignSecurityPrincipalNTAccount(principal) : ResolveNTAccount(principal),
+                NTAccount = principal.StructuralObjectClass == "foreignsecurityprincipal" ? PromptForForeignSecurityPrincipalCredentials(principal) : ResolveNTAccount(principal),
                 DirectGroups = new List<string> { groupName }
             };
             return member;
         }
 
-        static string ResolveForeignSecurityPrincipalNTAccount(Principal principal)
+        static string PromptForForeignSecurityPrincipalCredentials(Principal principal)
         {
             if (principal is AuthenticablePrincipal authPrincipal)
             {
                 SecurityIdentifier sid = authPrincipal.Sid;
                 try
-                {
-                    NTAccount ntAccount = (NTAccount)sid.Translate(typeof(NTAccount));
-                    return ntAccount.Value;
-                }
-                catch (IdentityNotMappedException)
                 {
                     Console.WriteLine("ForeignSecurityPrincipal detected. Please provide credentials for the trusted domain.");
 
@@ -314,7 +279,7 @@ namespace GetADGroupMembersFSP
                     // Attempt to resolve the NTAccount using the provided credentials
                     try
                     {
-                        using (PrincipalContext ctx = new PrincipalContext(ContextType.Domain, domain, username, password))
+                        using (var ctx = new PrincipalContext(ContextType.Domain, domain, username, password))
                         {
                             if (ctx.ValidateCredentials(username, password))
                             {
@@ -454,39 +419,61 @@ namespace GetADGroupMembersFSP
 
         static void HandleForeignSecurityPrincipal(Principal principal, List<GroupMember> members, string parentGroupName)
         {
-            if (principal is AuthenticablePrincipal authPrincipal && authPrincipal.StructuralObjectClass == "foreignsecurityprincipal")
+            if (principal is AuthenticablePrincipal authPrincipal)
             {
-                Console.WriteLine($"ForeignSecurityPrincipal detected: {principal.DistinguishedName}");
+                Console.WriteLine($"Processing member: {principal.DistinguishedName}");
 
                 // Parse the domain from the DistinguishedName
-                string domain = ParseDomainFromDistinguishedName(principal.DistinguishedName);
-                Console.WriteLine($"Domain: {domain}");
+                string memberDomain = ParseDomainFromDistinguishedName(principal.DistinguishedName);
+                string currentDomain = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties().DomainName;
 
-                // Prompt for credentials
-                Console.Write("Enter username for foreign domain: ");
-                string username = Console.ReadLine();
+                Console.WriteLine($"Current Domain: {currentDomain}");
+                Console.WriteLine($"Member Domain: {memberDomain}");
 
-                Console.Write("Enter password for foreign domain: ");
-                string password = ReadPassword();
-
-                try
+                if (string.Equals(memberDomain, currentDomain, StringComparison.OrdinalIgnoreCase))
                 {
-                    using (PrincipalContext foreignCtx = new PrincipalContext(ContextType.Domain, domain, username, password))
+                    Console.WriteLine("Member is from the same domain. Using current Windows credentials.");
+                    members.Add(CreateGroupMember(principal, parentGroupName));
+                }
+                else
+                {
+                    Console.WriteLine($"Member is from a different AD forest: {memberDomain}");
+
+                    // Prompt for credentials
+                    Console.Write("Enter username for foreign domain: ");
+                    string username = Console.ReadLine();
+
+                    Console.Write("Enter password for foreign domain: ");
+                    string password = ReadPassword();
+
+                    try
                     {
-                        if (foreignCtx.ValidateCredentials(username, password))
+                        using (PrincipalContext foreignCtx = new PrincipalContext(ContextType.Domain, memberDomain, username, password))
                         {
-                            Console.WriteLine("Credentials validated successfully for foreign domain.");
-                            members.Add(CreateGroupMember(principal, parentGroupName));
-                        }
-                        else
-                        {
-                            Console.WriteLine("Invalid credentials for the foreign domain.");
+                            if (foreignCtx.ValidateCredentials(username, password))
+                            {
+                                Console.WriteLine("Credentials validated successfully for foreign domain.");
+
+                                if (principal is GroupPrincipal foreignGroup)
+                                {
+                                    Console.WriteLine($"Enumerating nested members of foreign group: {foreignGroup.Name}");
+                                    GetGroupMembersRecursive(foreignGroup, members);
+                                }
+                                else
+                                {
+                                    members.Add(CreateGroupMember(principal, parentGroupName));
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine("Invalid credentials for the foreign domain.");
+                            }
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error connecting to foreign domain: {ex.Message}");
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error connecting to foreign domain: {ex.Message}");
+                    }
                 }
             }
         }
