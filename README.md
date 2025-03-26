@@ -71,10 +71,10 @@ Domain Name: example.com
 Group Name: Domain Users
 Total Members: 150
 Unique Members: 140
-| DistinguishedName | Class | NTAccountName | MembershipCount| DirectGroups |
-|-------------------|-------|---------------|----------------|--------------|
-| CN=John Doe,OU=Users,DC=example,DC=com | user | example\jdoe | 1 | Domain Users |
-| CN=Jane Smith,OU=Users,DC=example,DC=com | user | example\jsmith | 2 | Domain Users, Sales |
+| NTAccountName       | Class | MembershipCount | DirectGroups       |
+|---------------------|-------|-----------------|--------------------|
+| example\\jdoe       | user  | 1               | Domain Users       |
+| example\\jsmith     | user  | 2               | Domain Users, Sales |
 
 
 ### Sample CSV Output
@@ -91,8 +91,8 @@ The CSV file will contain the following columns:
 
 ```
 DistinguishedName,ObjectClass,NTAccountName,MembershipCount,DirectGroups
-CN=John Doe,OU=Users,DC=example,DC=com,user,example\jdoe,1,Domain Users
-CN=Jane Smith,OU=Users,DC=example,DC=com,user,example\jsmith,2,Domain Users|Sales
+CN=John Doe,OU=Users,DC=example,DC=com,user,example\\jdoe,1,Domain Users
+CN=Jane Smith,OU=Users,DC=example,DC=com,user,example\\jsmith,2,Domain Users|Sales
 ```
 
 ## License
