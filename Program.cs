@@ -111,6 +111,8 @@ namespace GetADGroupMembersFSP
                         .ToList();
                 }
 
+                // Update total members to reflect the MembershipCount in CSV output
+                totalMembers = uniqueMembers.Sum(m => m.Count); // Sum the MembershipCount property for accurate total
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"Total Members: {totalMembers}");
                 Console.WriteLine($"Unique Members: {uniqueMembers.Count}");
