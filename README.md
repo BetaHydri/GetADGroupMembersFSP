@@ -1,14 +1,15 @@
 # GetADGroupMembersFSP
 
 ## Overview
-GetADGroupMembersFSP is a .NET console application that retrieves members of an Active Directory group. It allows for recursive retrieval of nested group members and can export the results to a CSV file. The application can prompt for credentials if not provided and handle authentication errors.
+GetADGroupMembersFSP is a .NET console application that retrieves members of an Active Directory group. It allows for recursive retrieval of nested group members and can export the results to a CSV file. The application will prompt for credentials if a foreignSecurityPrincipal has been found as member of the group.
 
 ## Features
-- Parse command-line arguments for group name, recursive retrieval, output CSV file, CSV delimiter, username, password, and domain.
+- Parse command-line arguments for group name, recursive retrieval, output CSV file, CSV delimiter, and debug mode.
 - Retrieve members of a specified Active Directory group.
 - Optionally retrieve members recursively from nested groups.
 - Export the results to a specified CSV file.
 - Display additional information such as the domain name, group name, total members, unique members, and direct group memberships.
+- Enable debug mode for detailed logging and troubleshooting during execution.
 - Prompt for credentials if not provided and handle authentication errors.
 
 ## Prerequisites
@@ -33,7 +34,7 @@ GetADGroupMembersFSP is a .NET console application that retrieves members of an 
 ## Running the Application
 To run the application, use the following command format:
 ```sh
-GetADGroupMembersFSP.exe --group-name "YourGroupName" [--recursive] [--output-csv-file "path/to/output.csv"] [--csv-delimiter ","] [--username "username"] [--password "password"] [--domain "domainname"]
+GetADGroupMembersFSP.exe --group-name "YourGroupName" [--recursive] [--output-csv-file "path/to/output.csv"] [--csv-delimiter ","] [--debug]
 ```
 
 ### Command-Line Arguments
@@ -41,16 +42,12 @@ GetADGroupMembersFSP.exe --group-name "YourGroupName" [--recursive] [--output-cs
 - `--recursive`: Optional flag to retrieve members recursively from nested groups.
 - `--output-csv-file`: Optional path to save the output as a CSV file.
 - `--csv-delimiter`: Optional delimiter for the CSV file (default is a comma).
-- `--username`: Optional username to connect to Active Directory in the form `username`.
-- `--password`: Optional password to connect to Active Directory.
-- `--domain`: Optional domain to connect to Active Directory.
-
-If the `--username` and `--password` parameters are not provided, the application will prompt for credentials. If the authentication fails, the user will be prompted to enter the password again.
+- `--debug`: Optional flag to enable debug mode for additional logging and troubleshooting.
 
 ## Example
 To retrieve members of the group "Sales" and export to a CSV file:
 ```sh
-GetADGroupMembersFSP.exe --group-name "Sales" --output-csv-file "C:\output\sales_members.csv"
+GetADGroupMembersFSP.exe --group-name "Sales" --output-csv-file "C:\output\sales_members.csv" --debug
 ```
 
 ## Output
