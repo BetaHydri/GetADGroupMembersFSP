@@ -30,21 +30,11 @@ namespace GetADGroupMembersFSP
                     "--csv-delimiter",
                     () => ",",
                     "The delimiter to use in the CSV file"),
-                // Added parameters for username, password, and domain to allow explicit credential usage
-                new Option<string>(
-                    "--username",
-                    "The username to use for Active Directory authentication"),
-                new Option<string>(
-                    "--password",
-                    "The password to use for Active Directory authentication"),
-                new Option<string>(
-                    "--domain",
-                    "The domain to use for Active Directory authentication"),
             };
 
             rootCommand.Description = "GetADGroupMembersFSP - A tool to retrieve members of an Active Directory group and export them to a CSV file.";
 
-            rootCommand.Handler = CommandHandler.Create<string, bool, string, string, string, string, string>((groupName, recursive, outputCsvFile, csvDelimiter, username, password, domain) =>
+            rootCommand.Handler = CommandHandler.Create<string, bool, string, string>((groupName, recursive, outputCsvFile, csvDelimiter) =>
             {
                 if (string.IsNullOrEmpty(groupName))
                 {
@@ -56,29 +46,19 @@ namespace GetADGroupMembersFSP
 
                 try
                 {
-                    // Attempt to retrieve the current domain name
+                    // Use current Windows identity
                     string currentDomain = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties().DomainName;
-                    Console.WriteLine($"Retrieved domain name: {currentDomain}");
-
-                    if (string.IsNullOrEmpty(currentDomain))
-                    {
-                        throw new Exception("Unable to determine the current domain name.");
-                    }
-
-                    // Use current Windows identity if no credentials are provided
                     ctx = new PrincipalContext(ContextType.Domain, currentDomain);
                     Console.WriteLine("PrincipalContext created successfully using current Windows identity.");
-
-                    // Log the current Windows identity
-                    var currentIdentity = System.Security.Principal.WindowsIdentity.GetCurrent();
-                    Console.WriteLine($"Current Windows Identity: {currentIdentity.Name}");
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Error: Unable to connect to Active Directory. {ex.Message}");
-                    Console.WriteLine("Please ensure the machine is joined to the domain and the current user has sufficient permissions.");
                     return;
                 }
+
+                Console.WriteLine($"Using domain: Current Domain");
+                Console.WriteLine($"Using username: Current Windows Identity");
 
                 // Call the method to get group members
                 List<GroupMember> members = GetGroupMembers(groupName, recursive, ctx);
@@ -119,23 +99,30 @@ namespace GetADGroupMembersFSP
                 int maxNTAccountNameLength = uniqueMembers.Any() ? uniqueMembers.Max(m => m.Member.NTAccount.Length) : 0;
                 int maxDirectGroupsLength = uniqueMembers.Any() ? uniqueMembers.Max(m => string.Join(", ", m.Member.DirectGroups).Length) : 0;
 
-                Console.WriteLine($"| {"DistinguishedName".PadRight(maxDistinguishedNameLength)} | {"Class".PadRight(maxObjectClassLength)} | {"NTAccountName".PadRight(maxNTAccountNameLength)} | MembershipCount| {"DirectGroups".PadRight(maxDirectGroupsLength)} |");
-                Console.WriteLine($"|{new string('-', maxDistinguishedNameLength + 2)}|{new string('-', maxObjectClassLength + 2)}|{new string('-', maxNTAccountNameLength + 2)}|----------------|{new string('-', maxDirectGroupsLength + 2)}|");
-                foreach (var member in uniqueMembers)
+                if (totalMembers > 0)
                 {
-                    if (member.Count > 1)
+                    Console.WriteLine($"| {"DistinguishedName".PadRight(maxDistinguishedNameLength)} | {"Class".PadRight(maxObjectClassLength)} | {"NTAccountName".PadRight(maxNTAccountNameLength)} | MembershipCount| {"DirectGroups".PadRight(maxDirectGroupsLength)} |");
+                    Console.WriteLine($"|{new string('-', maxDistinguishedNameLength + 2)}|{new string('-', maxObjectClassLength + 2)}|{new string('-', maxNTAccountNameLength + 2)}|----------------|{new string('-', maxDirectGroupsLength + 2)}|");
+                    foreach (var member in uniqueMembers)
                     {
-                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        if (member.Count > 1)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = ConsoleColor.Green;
+                        }
+                        Console.WriteLine($"| {member.Member.DistinguishedName.PadRight(maxDistinguishedNameLength)} | {member.Member.ObjectClass.PadRight(maxObjectClassLength)} | {member.Member.NTAccount.PadRight(maxNTAccountNameLength)} | {member.Count.ToString().PadRight(14)} | {string.Join(", ", member.Member.DirectGroups).PadRight(maxDirectGroupsLength)} |");
                     }
-                    else
-                    {
-                        Console.ForegroundColor = ConsoleColor.Green;
-                    }
-                    Console.WriteLine($"| {member.Member.DistinguishedName.PadRight(maxDistinguishedNameLength)} | {member.Member.ObjectClass.PadRight(maxObjectClassLength)} | {member.Member.NTAccount.PadRight(maxNTAccountNameLength)} | {member.Count.ToString().PadRight(14)} | {string.Join(", ", member.Member.DirectGroups).PadRight(maxDirectGroupsLength)} |");
-                }
 
-                // Reset the console color
-                Console.ResetColor();
+                    // Reset the console color
+                    Console.ResetColor();
+                }
+                else
+                {
+                    Console.WriteLine("No members found in the specified group.");
+                }
             });
 
             return rootCommand.InvokeAsync(args).Result;
@@ -144,53 +131,143 @@ namespace GetADGroupMembersFSP
         static List<GroupMember> GetGroupMembers(string groupName, bool recursive, PrincipalContext ctx)
         {
             List<GroupMember> members = new List<GroupMember>();
+
             try
             {
-                using (ctx)
-                {
-                    Console.WriteLine($"Attempting to find group: {groupName}");
-                    GroupPrincipal group = GroupPrincipal.FindByIdentity(ctx, groupName);
-                    if (group != null)
-                    {
-                        Console.WriteLine($"Group '{groupName}' found.");
-                        Console.WriteLine($"Distinguished Name of the group: {group.DistinguishedName}");
+            // Get the distinguished name of the group
+            string groupDistinguishedName = GetGroupDistinguishedName(groupName, ctx);
 
-                        if (recursive)
-                        {
-                            Console.WriteLine("Retrieving members recursively.");
-                            Console.WriteLine("Listing all direct members in the initial group:");
-                            foreach (Principal p in group.GetMembers(false))
-                            {
-                                Console.WriteLine($"Direct Member: {p.DistinguishedName}, ObjectClass: {p.StructuralObjectClass}");
-                            }
-                            Console.WriteLine("Proceeding with recursive enumeration of nested members.");
-                            GetGroupMembersRecursive(group, members);
-                        }
-                        else
-                        {
-                            Console.WriteLine("Retrieving direct members.");
-                            foreach (Principal p in group.GetMembers())
-                            {
-                                Console.WriteLine($"Found member: {p.DistinguishedName}");
-                                members.Add(CreateGroupMember(p, group.Name));
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Group '{groupName}' not found.");
-                    }
-                }
-            }
-            catch (PrincipalOperationException ex)
+            if (string.IsNullOrEmpty(groupDistinguishedName))
             {
-                Console.WriteLine($"Authentication error: {ex.Message}");
+                Console.WriteLine($"Group '{groupName}' not found in Active Directory.");
+                return members;
+            }
+
+            Console.WriteLine($"Distinguished Name of the group: {groupDistinguishedName}");
+
+            // Use ADSI LDAP to retrieve group members
+            using (DirectoryEntry groupEntry = new DirectoryEntry($"LDAP://{ctx.ConnectedServer}/{groupDistinguishedName}"))
+            {
+                RetrieveGroupMembersRecursive(groupEntry, members, recursive);
+            }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: {ex.Message}");
+            Console.WriteLine($"Error retrieving group members: {ex.Message}");
             }
+
             return members;
+        }
+
+        static void RetrieveGroupMembersRecursive(DirectoryEntry groupEntry, List<GroupMember> members, bool recursive)
+        {
+            try
+            {
+            PropertyValueCollection memberProperty = groupEntry.Properties["member"];
+            if (memberProperty != null)
+            {
+                foreach (var memberDn in memberProperty)
+                {
+                if (memberDn.ToString().Contains("CN=ForeignSecurityPrincipal"))
+                {
+                    try
+                    {
+                        // Extract the SID from the DN
+                        string sidString = memberDn.ToString().Split(',')[0].Substring(3); // Extract "S-1-5-21-..."
+                        SecurityIdentifier sid = new SecurityIdentifier(sidString);
+
+                        // Translate the SID to an NTAccount
+                        NTAccount ntAccount = (NTAccount)sid.Translate(typeof(NTAccount));
+                        string ntAccountName = ntAccount.Value;
+
+                        Console.WriteLine($"Resolved NTAccountName: {ntAccountName}");
+
+                        // Extract the domain part of the NTAccountName
+                        string domain = ntAccountName.Split('\\')[0];
+                        Console.WriteLine($"Domain of ForeignSecurityPrincipal: {domain}");
+
+                        // Prompt for credentials for the foreign domain
+                        Console.WriteLine($"Authentication required for domain: {domain}");
+                        Console.Write("Enter username for foreign domain: ");
+                        string username = Console.ReadLine();
+
+                        Console.Write("Enter password for foreign domain: ");
+                        string password = ReadPassword();
+
+                        // Validate credentials and add the member
+                        using (PrincipalContext foreignCtx = new PrincipalContext(ContextType.Domain, domain, username, password))
+                        {
+                            if (foreignCtx.ValidateCredentials(username, password))
+                            {
+                                Console.WriteLine("Credentials validated successfully for foreign domain.");
+
+                                using (GroupPrincipal foreignGroup = GroupPrincipal.FindByIdentity(foreignCtx, ntAccountName))
+                                {
+                                    if (foreignGroup != null)
+                                    {
+                                        Console.WriteLine($"ForeignSecurityPrincipal is a group: {foreignGroup.Name}");
+
+                                        if (recursive)
+                                        {
+                                            Console.WriteLine($"Recursively retrieving members of foreign group: {foreignGroup.Name}");
+                                            GetGroupMembersRecursive(foreignGroup, members);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("ForeignSecurityPrincipal is not a group.");
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine("Invalid credentials for the foreign domain.");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error resolving ForeignSecurityPrincipal: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"Found member: {GetGroupNameFromDistinguishedName(memberDn.ToString())}");
+                }
+
+                using (DirectoryEntry memberEntry = new DirectoryEntry($"LDAP://{memberDn}"))
+                {
+                    string objectClass = memberEntry.SchemaClassName;
+                    string distinguishedName = memberEntry.Properties["distinguishedName"].Value.ToString();
+
+                    GroupMember member = new GroupMember
+                    {
+                    DistinguishedName = distinguishedName,
+                    ObjectClass = objectClass,
+                    NTAccount = ResolveNTAccountFromDistinguishedName(distinguishedName),
+                    DirectGroups = new List<string> { groupEntry.Properties["name"].Value.ToString() } // Use SamAccountName or name
+                    };
+
+                    members.Add(member);
+
+                    // If recursive and the member is a group, retrieve its members
+                    if (recursive && objectClass.Equals("group", StringComparison.OrdinalIgnoreCase))
+                    {
+                    Console.WriteLine($"Recursively retrieving members of nested group: {GetGroupNameFromDistinguishedName(distinguishedName)}");
+                    RetrieveGroupMembersRecursive(memberEntry, members, recursive);
+                    }
+                }
+                }
+            }
+            else
+            {
+                Console.WriteLine("No members found in the group.");
+            }
+            }
+            catch (Exception ex)
+            {
+            Console.WriteLine($"Error retrieving members recursively: {ex.Message}");
+            }
         }
 
         static void GetGroupMembersRecursive(GroupPrincipal group, List<GroupMember> members, List<string> parentGroups = null)
@@ -212,7 +289,7 @@ namespace GetADGroupMembersFSP
                     if (!string.Equals(initialGroupDomain, memberDomain, StringComparison.OrdinalIgnoreCase) || p.StructuralObjectClass == "foreignsecurityprincipal")
                     {
                         Console.WriteLine($"Foreign member or placeholder detected: {p.DistinguishedName} from domain {memberDomain}");
-                        HandleForeignSecurityPrincipal(p, members, group.Name);
+                        HandleForeignSecurityPrincipal(p.DistinguishedName, members, group.Name, true);
                         continue;
                     }
 
@@ -232,6 +309,14 @@ namespace GetADGroupMembersFSP
                         Console.WriteLine($"Recursively retrieving members of nested group: {nestedGroup.Name}");
                         GetGroupMembersRecursive(nestedGroup, members, parentGroups);
                     }
+                }
+                catch (System.Security.Authentication.AuthenticationException ex)
+                {
+                    Console.WriteLine($"Authentication error for member: {p.Name}. {ex.Message}");
+                    Console.WriteLine("Prompting for credentials for the foreign domain...");
+
+                    // Prompt for credentials and handle the foreign security principal
+                    HandleForeignSecurityPrincipal(p.DistinguishedName, members, group.Name, true);
                 }
                 catch (PrincipalOperationException ex)
                 {
@@ -289,6 +374,7 @@ namespace GetADGroupMembersFSP
                             else
                             {
                                 Console.WriteLine("Invalid credentials for the trusted domain.");
+                                return "Unresolved NTAccount";
                             }
                         }
                     }
@@ -417,64 +503,149 @@ namespace GetADGroupMembersFSP
             return string.Join(".", domainComponents);
         }
 
-        static void HandleForeignSecurityPrincipal(Principal principal, List<GroupMember> members, string parentGroupName)
+        static void HandleForeignSecurityPrincipal(string distinguishedName, List<GroupMember> members, string parentGroupName, bool recursive)
         {
-            if (principal is AuthenticablePrincipal authPrincipal)
+            try
             {
-                Console.WriteLine($"Processing member: {principal.DistinguishedName}");
+                // Extract the SID from the DN
+                string sidString = distinguishedName.Split(',')[0].Substring(3); // Extract "S-1-5-21-..."
+                string ntAccountName = ResolveNTAccountNameUsingDirectoryServices(sidString);
 
-                // Parse the domain from the DistinguishedName
-                string memberDomain = ParseDomainFromDistinguishedName(principal.DistinguishedName);
-                string currentDomain = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties().DomainName;
-
-                Console.WriteLine($"Current Domain: {currentDomain}");
-                Console.WriteLine($"Member Domain: {memberDomain}");
-
-                if (string.Equals(memberDomain, currentDomain, StringComparison.OrdinalIgnoreCase))
+                if (string.IsNullOrEmpty(ntAccountName))
                 {
-                    Console.WriteLine("Member is from the same domain. Using current Windows credentials.");
-                    members.Add(CreateGroupMember(principal, parentGroupName));
+                    Console.WriteLine($"Unable to resolve NTAccountName for SID: {sidString}");
+                    return;
                 }
-                else
+
+                Console.WriteLine($"Resolved NTAccountName: {ntAccountName}");
+
+                // Extract the domain part of the NTAccountName
+                string domain = ntAccountName.Split('\\')[0];
+                Console.WriteLine($"Domain of ForeignSecurityPrincipal: {domain}");
+
+                // Prompt for credentials for the foreign domain
+                Console.WriteLine($"Authentication required for domain: {domain}");
+                Console.Write("Enter username for foreign domain: ");
+                string username = Console.ReadLine();
+
+                Console.Write("Enter password for foreign domain: ");
+                string password = ReadPassword();
+
+                // Validate credentials and add the member
+                using (PrincipalContext foreignCtx = new PrincipalContext(ContextType.Domain, domain, username, password))
                 {
-                    Console.WriteLine($"Member is from a different AD forest: {memberDomain}");
-
-                    // Prompt for credentials
-                    Console.Write("Enter username for foreign domain: ");
-                    string username = Console.ReadLine();
-
-                    Console.Write("Enter password for foreign domain: ");
-                    string password = ReadPassword();
-
-                    try
+                    if (foreignCtx.ValidateCredentials(username, password))
                     {
-                        using (PrincipalContext foreignCtx = new PrincipalContext(ContextType.Domain, memberDomain, username, password))
-                        {
-                            if (foreignCtx.ValidateCredentials(username, password))
-                            {
-                                Console.WriteLine("Credentials validated successfully for foreign domain.");
+                        Console.WriteLine("Credentials validated successfully for foreign domain.");
 
-                                if (principal is GroupPrincipal foreignGroup)
+                        using (GroupPrincipal foreignGroup = GroupPrincipal.FindByIdentity(foreignCtx, ntAccountName))
+                        {
+                            if (foreignGroup != null)
+                            {
+                                Console.WriteLine($"ForeignSecurityPrincipal is a group: {foreignGroup.Name}");
+
+                                if (recursive)
                                 {
-                                    Console.WriteLine($"Enumerating nested members of foreign group: {foreignGroup.Name}");
+                                    Console.WriteLine($"Recursively retrieving members of foreign group: {foreignGroup.Name}");
                                     GetGroupMembersRecursive(foreignGroup, members);
-                                }
-                                else
-                                {
-                                    members.Add(CreateGroupMember(principal, parentGroupName));
                                 }
                             }
                             else
                             {
-                                Console.WriteLine("Invalid credentials for the foreign domain.");
+                                Console.WriteLine("ForeignSecurityPrincipal is not a group.");
                             }
                         }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        Console.WriteLine($"Error connecting to foreign domain: {ex.Message}");
+                        Console.WriteLine("Invalid credentials for the foreign domain.");
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error handling ForeignSecurityPrincipal: {ex.Message}");
+            }
+        }
+
+        static string ResolveNTAccountNameUsingDirectoryServices(string sidString)
+        {
+            try
+            {
+                // Convert the SID string to a SecurityIdentifier object
+                SecurityIdentifier sid = new SecurityIdentifier(sidString);
+
+                // Translate the SID to an NTAccount
+                NTAccount ntAccount = (NTAccount)sid.Translate(typeof(NTAccount));
+                return ntAccount.Value;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error resolving SID to NTAccountName: {ex.Message}");
+                return null;
+            }
+        }
+
+        static string GetGroupDistinguishedName(string groupName, PrincipalContext ctx)
+        {
+            using (DirectorySearcher searcher = new DirectorySearcher(new DirectoryEntry($"LDAP://{ctx.ConnectedServer}")))
+            {
+                searcher.Filter = $"(&(objectClass=group)(cn={groupName}))";
+                searcher.PropertiesToLoad.Add("distinguishedName");
+
+                SearchResult result = searcher.FindOne();
+                if (result != null && result.Properties["distinguishedName"].Count > 0)
+                {
+                    return result.Properties["distinguishedName"][0].ToString();
+                }
+            }
+            return null;
+        }
+
+        static string GetObjectClass(string distinguishedName)
+        {
+            try
+            {
+                using (DirectoryEntry entry = new DirectoryEntry($"LDAP://{distinguishedName}"))
+                {
+                    return entry.SchemaClassName;
+                }
+            }
+            catch
+            {
+                return "Unknown";
+            }
+        }
+
+        static string ResolveNTAccountFromDistinguishedName(string distinguishedName)
+        {
+            try
+            {
+                using (DirectoryEntry entry = new DirectoryEntry($"LDAP://{distinguishedName}"))
+                {
+                    SecurityIdentifier sid = new SecurityIdentifier((byte[])entry.Properties["objectSid"][0], 0);
+                    NTAccount ntAccount = (NTAccount)sid.Translate(typeof(NTAccount));
+                    return ntAccount.Value;
+                }
+            }
+            catch
+            {
+                return "Unresolved NTAccount";
+            }
+        }
+
+        static string GetGroupNameFromDistinguishedName(string distinguishedName)
+        {
+            try
+            {
+                using (DirectoryEntry entry = new DirectoryEntry($"LDAP://{distinguishedName}"))
+                {
+                    return entry.Properties["cn"].Value.ToString();
+                }
+            }
+            catch
+            {
+                return "Unknown Group";
             }
         }
     }
