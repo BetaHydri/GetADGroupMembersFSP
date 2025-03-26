@@ -89,15 +89,27 @@ namespace GetADGroupMembersFSP
                 Console.WriteLine($"Domain Name: {GetDomainName()}");
                 Console.WriteLine($"Group Name: {groupName}");
 
-                int totalMembers = members.Sum(m => m.DirectGroups.Count);
+                // Calculate the total members count correctly
+                int totalMembers = members.Count;
+                // Ensure MembersCount is calculated correctly and DirectGroups includes all groups
                 var uniqueMembers = members
                     .GroupBy(m => m.DistinguishedName)
                     .Select(g => new
                     {
                         Member = g.First(),
-                        Count = g.First().DirectGroups.Count
+                        Count = g.Sum(m => m.DirectGroups.Count) // Sum all DirectGroups for accurate MembersCount
                     })
                     .ToList();
+
+                // Update DirectGroups to include all groups where the AD object is a member
+                foreach (var member in uniqueMembers)
+                {
+                    member.Member.DirectGroups = members
+                        .Where(m => m.DistinguishedName == member.Member.DistinguishedName)
+                        .SelectMany(m => m.DirectGroups)
+                        .Distinct()
+                        .ToList();
+                }
 
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"Total Members: {totalMembers}");
@@ -266,6 +278,12 @@ namespace GetADGroupMembersFSP
                     NTAccount = ResolveNTAccountFromDistinguishedName(distinguishedName),
                     DirectGroups = new List<string> { groupEntry.Properties["name"].Value.ToString() } // Use SamAccountName or name
                     };
+
+                    // Ensure the DirectGroups property includes the initial group for user objects
+                    if (!member.DirectGroups.Contains(groupEntry.Properties["name"].Value.ToString()))
+                    {
+                        member.DirectGroups.Add(groupEntry.Properties["name"].Value.ToString());
+                    }
 
                     members.Add(member);
 
