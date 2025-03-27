@@ -64,15 +64,7 @@ Unique members will be displayed in green, and members with multiple memberships
 
 ### Sample Console Output
 
-Domain Name: example.com
-Group Name: Domain Users
-Total Members: 150
-Unique Members: 140
-| NTAccountName       | Class | MembershipCount | DirectGroups       |
-|---------------------|-------|-----------------|--------------------|
-| example\\jdoe       | user  | 1               | Domain Users       |
-| example\\jsmith     | user  | 2               | Domain Users, Sales |
-
+![alt text](https://github.com/BetaHydri/GetADGroupMembersFSP/blob/main/ConsoleOut.png)
 
 ### Sample CSV Output
 
