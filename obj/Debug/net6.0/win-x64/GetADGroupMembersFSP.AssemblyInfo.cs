@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GetADGroupMembersFSP")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6383fbbaeac246bb104d2744659658edce272d36")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ddec7e22da77f8eaedd831f7922062a76bf6593e")]
 [assembly: System.Reflection.AssemblyProductAttribute("GetADGroupMembersFSP")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GetADGroupMembersFSP")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
