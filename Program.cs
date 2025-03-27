@@ -64,7 +64,9 @@ namespace GetADGroupMembersFSP
                 }
                 catch (Exception ex)
                 {
+                    Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine($"Error: Unable to connect to Active Directory. {ex.Message}");
+                    Console.ResetColor();
                     return;
                 }
 
@@ -80,7 +82,9 @@ namespace GetADGroupMembersFSP
                     }
                     catch (UnauthorizedAccessException ex)
                     {
+                        Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine($"Unauthorized access error: {ex.Message}");
+                        Console.ResetColor();
                         return;
                     }
                 }
@@ -177,7 +181,9 @@ namespace GetADGroupMembersFSP
             }
             catch (Exception ex)
             {
-            Console.WriteLine($"Error retrieving group members: {ex.Message}");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Error retrieving group members: {ex.Message}");
+                Console.ResetColor();
             }
 
             return members;
@@ -258,7 +264,9 @@ namespace GetADGroupMembersFSP
                     }
                     catch (Exception ex)
                     {
+                        Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine($"Error resolving ForeignSecurityPrincipal: {ex.Message}");
+                        Console.ResetColor();
                     }
                 }
                 else
@@ -307,7 +315,9 @@ namespace GetADGroupMembersFSP
             }
             catch (Exception ex)
             {
-            Console.WriteLine($"Error retrieving members recursively: {ex.Message}");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Error retrieving members recursively: {ex.Message}");
+                Console.ResetColor();
             }
         }
 
@@ -357,8 +367,10 @@ namespace GetADGroupMembersFSP
                 }
                 catch (System.Security.Authentication.AuthenticationException ex)
                 {
+                    Console.ForegroundColor = ConsoleColor.Cyan;
                     Console.WriteLine($"Authentication error for member: {p.Name}. {ex.Message}");
                     Console.WriteLine("Prompting for credentials for the foreign domain...");
+                    Console.ResetColor();
 
                     // Prompt for credentials and handle the foreign security principal
                     HandleForeignSecurityPrincipal(p.DistinguishedName, members, group.Name, true, debug);
@@ -369,7 +381,9 @@ namespace GetADGroupMembersFSP
                 }
                 catch (Exception ex)
                 {
+                    Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine($"Unexpected error retrieving member: {p.Name}. {ex.Message}");
+                    Console.ResetColor();
                 }
             }
             parentGroups.Remove(group.Name);
@@ -425,12 +439,16 @@ namespace GetADGroupMembersFSP
                     }
                     catch (Exception ex)
                     {
+                        Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine($"Error resolving ForeignSecurityPrincipal: {ex.Message}");
+                        Console.ResetColor();
                     }
                 }
                 catch (Exception ex)
                 {
+                    Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine($"Error resolving ForeignSecurityPrincipal: {ex.Message}");
+                    Console.ResetColor();
                 }
             }
             return "Unknown NTAccount";
@@ -506,7 +524,10 @@ namespace GetADGroupMembersFSP
             }
             catch (Exception ex)
             {
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"Error retrieving domain name: {ex.Message}");
+                Console.ResetColor();
+                // Return a default value or handle the error as needed
                 return "Unknown Domain";
             }
         }
@@ -552,69 +573,71 @@ namespace GetADGroupMembersFSP
         {
             try
             {
-            // Extract the SID from the DN
-            string sidString = distinguishedName.Split(',')[0].Substring(3); // Extract "S-1-5-21-..."
-            string ntAccountName = ResolveNTAccountNameUsingDirectoryServices(sidString);
+                // Extract the SID from the DN
+                string sidString = distinguishedName.Split(',')[0].Substring(3); // Extract "S-1-5-21-..."
+                string ntAccountName = ResolveNTAccountNameUsingDirectoryServices(sidString);
 
-            if (string.IsNullOrEmpty(ntAccountName))
-            {
-                Console.WriteLine($"Unable to resolve NTAccountName for SID: {sidString}");
-                return;
-            }
-            if (debug)
-            {
-                Console.WriteLine($"Resolved NTAccountName: {ntAccountName}");
-            }
-            // Extract the domain part of the NTAccountName
-            string domain = ntAccountName.Split('\\')[0];
-            if (debug) {
-                Console.WriteLine($"Domain of ForeignSecurityPrincipal: {domain}");
-            }
-            // Prompt for credentials for the foreign domain
-            Console.WriteLine($"Authentication required for domain: {domain}");
-            Console.Write("Enter username for foreign domain: ");
-            string username = Console.ReadLine();
-
-            Console.Write("Enter password for foreign domain: ");
-            string password = ReadPassword();
-
-            // Validate credentials and add the member
-            using (PrincipalContext foreignCtx = new PrincipalContext(ContextType.Domain, domain, username, password))
-            {
-                if (foreignCtx.ValidateCredentials(username, password))
+                if (string.IsNullOrEmpty(ntAccountName))
                 {
-                Console.WriteLine("Credentials validated successfully for foreign domain.");
-
-                using (GroupPrincipal foreignGroup = GroupPrincipal.FindByIdentity(foreignCtx, ntAccountName))
+                    Console.WriteLine($"Unable to resolve NTAccountName for SID: {sidString}");
+                    return;
+                }
+                if (debug)
                 {
-                    if (foreignGroup != null)
-                    {
-                    Console.WriteLine($"ForeignSecurityPrincipal is a group: {foreignGroup.Name}");
+                    Console.WriteLine($"Resolved NTAccountName: {ntAccountName}");
+                }
+                // Extract the domain part of the NTAccountName
+                string domain = ntAccountName.Split('\\')[0];
+                if (debug) {
+                    Console.WriteLine($"Domain of ForeignSecurityPrincipal: {domain}");
+                }
+                // Prompt for credentials for the foreign domain
+                Console.WriteLine($"Authentication required for domain: {domain}");
+                Console.Write("Enter username for foreign domain: ");
+                string username = Console.ReadLine();
 
-                    if (recursive)
+                Console.Write("Enter password for foreign domain: ");
+                string password = ReadPassword();
+
+                // Validate credentials and add the member
+                using (PrincipalContext foreignCtx = new PrincipalContext(ContextType.Domain, domain, username, password))
+                {
+                    if (foreignCtx.ValidateCredentials(username, password))
                     {
-                        if (debug)
+                    Console.WriteLine("Credentials validated successfully for foreign domain.");
+
+                    using (GroupPrincipal foreignGroup = GroupPrincipal.FindByIdentity(foreignCtx, ntAccountName))
+                    {
+                        if (foreignGroup != null)
                         {
-                        Console.WriteLine($"Recursively retrieving members of foreign group: {foreignGroup.Name}");
+                        Console.WriteLine($"ForeignSecurityPrincipal is a group: {foreignGroup.Name}");
+
+                        if (recursive)
+                        {
+                            if (debug)
+                            {
+                            Console.WriteLine($"Recursively retrieving members of foreign group: {foreignGroup.Name}");
+                            }
+                            GetGroupMembersRecursive(foreignGroup, members, null, debug);
                         }
-                        GetGroupMembersRecursive(foreignGroup, members, null, debug);
+                        }
+                        else
+                        {
+                        Console.WriteLine("ForeignSecurityPrincipal is not a group.");
+                        }
                     }
                     }
                     else
                     {
-                    Console.WriteLine("ForeignSecurityPrincipal is not a group.");
+                    Console.WriteLine("Invalid credentials for the foreign domain.");
                     }
                 }
-                }
-                else
-                {
-                Console.WriteLine("Invalid credentials for the foreign domain.");
-                }
-            }
             }
             catch (Exception ex)
             {
-            Console.WriteLine($"Error handling ForeignSecurityPrincipal: {ex.Message}");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Error handling ForeignSecurityPrincipal: {ex.Message}");
+                Console.ResetColor();
             }
         }
 
@@ -631,7 +654,9 @@ namespace GetADGroupMembersFSP
             }
             catch (Exception ex)
             {
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"Error resolving SID to NTAccountName: {ex.Message}");
+                Console.ResetColor();
                 return null;
             }
         }
